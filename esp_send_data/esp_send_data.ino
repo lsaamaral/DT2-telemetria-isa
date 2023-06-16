@@ -467,8 +467,9 @@ void GPSTask(void *pvParameters) {
     // vTaskDelay(100);
   }//end while
 }//end GPS task
-//----------------------------------------------------------------------------------------------------------------
 
+//----------------------------------------------------------------------------------------------------------------
+/*
 void EnvioDeDadosTask(void *pvParameters) {
   while (true) {
     //Check WiFi connection status
@@ -547,17 +548,21 @@ void EnvioDeDadosTask(void *pvParameters) {
   }//end while
 }//end EnvioDeDados
 //----------------------------------------------------------------------------------------------------------------
+*/
 
 //Escrever os dados do sensor no cartao SD
 void logSDCard() {
-  dataMessage = String(readingID) + "," + String(dayStamp) + "," + String(timeStamp) + "," + 
-                String(temperature) + "\r\n";
+  dataMessage = "api_key=" + apiKeyValue +"&rpm=" + String(rpm,1) + "&speed=" + String(speed, 2) + "&average_speed=" + String(average_speed, 2) + "&wheel_diameter=" + String(wheel_diameter, 2) +
+                              "&lat=" + String(lat, 8) + "&lng=" + String(lng, 8) + 
+                              "&celcius=" + String(celcius) + "&farenheits=" + String(farenheits) + 
+                              "&voltage_battery=" + String(voltage_battery, 1) + "&current_motor=" + String(current_motor, 1) + "&power=" + String(power, 1) + "&consumption=" + String(consumption, 1) + 
+                              "&reading_time=" + reading_time + "";
   Serial.print("Save data: ");
   Serial.println(dataMessage);
   appendFile(SD, "/data.txt", dataMessage.c_str());
 }
 
-//
+// Escrever no cartao SD
 void writeFile(fs::FS &fs, const char * path, const char * message) {
   Serial.printf("Writing file: %s\n", path);
 
@@ -574,7 +579,7 @@ void writeFile(fs::FS &fs, const char * path, const char * message) {
   file.close();
 }
 
-// Append data to the SD card (DON'T MODIFY THIS FUNCTION)
+// Anexar dados no cartao SD
 void appendFile(fs::FS &fs, const char * path, const char * message) {
   Serial.printf("Appending to file: %s\n", path);
 
