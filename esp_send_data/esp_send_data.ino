@@ -25,11 +25,14 @@ TinyGsm modem(SerialAT);
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
+#include "FS.h"
 #include <WiFi.h>
+#include <WiFiUdp.h>
 #include <HTTPClient.h>
 #include <Wire.h>
 #include <INA.h> // INA Library (by Zanshin)
 #include <SD.h>
+#include <SPI.h>
 #include <math.h>
 
 //-----------------------------------Replace with your network credentials----------------------------------------
@@ -80,6 +83,9 @@ String apiKeyValue = "tPmAT5Ab3j7F9";
   float power = 0;
   float consumption = 0;
   float consumoParcial = 0;
+
+  //Definir pino CS para o modulo do cartao SD
+  #define SD_CS 5
 
   //Variaveis de tempo para verificar tempo de execucao de tasks
   long tempoAtual = 0;
@@ -262,6 +268,36 @@ void setup() {
   xSemaphoreTake(displayMutex, portMAX_DELAY);
   Serial.println("All tasks created");
   xSemaphoreGive(displayMutex);
+
+  //Inicializando cartao SD
+  SD.begin(SD_CS);  
+  if(!SD.begin(SD_CS)) {
+    Serial.println("Card Mount Failed");
+    return;
+  }
+  uint8_t cardType = SD.cardType();
+  if(cardType == CARD_NONE) {
+    Serial.println("No SD card attached");
+    return;
+  }
+  Serial.println("Initializing SD card...");
+  if (!SD.begin(SD_CS)) {
+    Serial.println("ERROR - SD card initialization failed!");
+    return;    // init failed
+  }
+
+  // If the data.txt file doesn't exist
+  // Create a file on the SD card and write the data labels
+  File file = SD.open("/data.txt");
+  if(!file) {
+    Serial.println("File doens't exist");
+    Serial.println("Creating file...");
+    writeFile(SD, "/data.txt", "Reading ID, Date, Hour, Temperature \r\n");
+  }
+  else {
+    Serial.println("File already exists");  
+  }
+  file.close();
 
 }//end setup
 //----------------------------------------------------------------------------------------------------------------
@@ -512,6 +548,48 @@ void EnvioDeDadosTask(void *pvParameters) {
 }//end EnvioDeDados
 //----------------------------------------------------------------------------------------------------------------
 
+//Escrever os dados do sensor no cartao SD
+void logSDCard() {
+  dataMessage = String(readingID) + "," + String(dayStamp) + "," + String(timeStamp) + "," + 
+                String(temperature) + "\r\n";
+  Serial.print("Save data: ");
+  Serial.println(dataMessage);
+  appendFile(SD, "/data.txt", dataMessage.c_str());
+}
+
+//
+void writeFile(fs::FS &fs, const char * path, const char * message) {
+  Serial.printf("Writing file: %s\n", path);
+
+  File file = fs.open(path, FILE_WRITE);
+  if(!file) {
+    Serial.println("Failed to open file for writing");
+    return;
+  }
+  if(file.print(message)) {
+    Serial.println("File written");
+  } else {
+    Serial.println("Write failed");
+  }
+  file.close();
+}
+
+// Append data to the SD card (DON'T MODIFY THIS FUNCTION)
+void appendFile(fs::FS &fs, const char * path, const char * message) {
+  Serial.printf("Appending to file: %s\n", path);
+
+  File file = fs.open(path, FILE_APPEND);
+  if(!file) {
+    Serial.println("Failed to open file for appending");
+    return;
+  }
+  if(file.print(message)) {
+    Serial.println("Message appended");
+  } else {
+    Serial.println("Append failed");
+  }
+  file.close();
+}
 
 void loop() {
   // compute total revolutions and revolutions per second
