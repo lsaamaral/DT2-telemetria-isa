@@ -6,7 +6,7 @@
 #include <WiFiUdp.h>
 
 // Replace with your network credentials
-const char* ssid     = "Milhagem";
+const char* ssid = "Milhagem";
 const char* password = "ehomilhas";
 
 //Definir pino CS para o modulo do cartao SD
@@ -100,7 +100,7 @@ void getTimeStamp() {
 
 // Write the sensor readings on the SD card
 void logSDCard() {
-  dataMessage = "ebaaa deu certo";
+  dataMessage = "lugar dos dados";
   Serial.print("Save data: ");
   Serial.println(dataMessage);
   appendFile(SD, "/data.txt", dataMessage.c_str());
