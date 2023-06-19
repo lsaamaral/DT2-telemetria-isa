@@ -10,7 +10,7 @@ const char* ssid = "Milhagem";
 const char* password = "ehomilhas";
 
 //Definir pino CS para o modulo do cartao SD
-#define SD_CS 5
+#define SD_CS 16
 
 //Salva o numero de leitura na memoria RTC
 RTC_DATA_ATTR int readingID = 0;
